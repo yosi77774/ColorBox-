@@ -1,26 +1,28 @@
 <div class="col" id="description">
   <p ng-class="{ 'other-step': step != 'load' }">1. Load an image.</p>
   <p ng-class="{ 'other-step': step != 'select' }">2. Click some points on the image to select your color palette.</p>
-  <p ng-class="{ 'other-step': step != 'select' || palette.length < 2 }">3. Click PBNify and the image will be converted to a paint by number template.</p>
-  <p ng-class="{ 'other-step': step != 'result' }">4. Save the outline and palette, print them out, and paint/color.</p>
-  <p ng-class="'other-step'"><em>Privacy note: Your image will only be loaded into the browser on your computer. Nothing will be uploaded anywhere.</em></p>
+  <p ng-class="{ 'other-step': step != 'select' || palette.length < 2 }">3. Click ColorBox and the image will be converted to a paint by number template.</p>
+  <p ng-class="{ 'other-step': step != 'result' }">4. Save/Print the outline, filled image and palette, then print and paint/color.</p>
+  <p ng-class="'other-step'">
+    <em>Privacy note: Your image will only be loaded into the browser on your computer. Nothing will be uploaded anywhere.</em>
+  </p>
 </div>
-
 
 <div class="col" ng-show="step == 'load'">
   <label id="widthSliderLabel" for="widthSlider">Resize width to:
-  <span id="widthSliderNumber">800</span>px</label>
+    <span id="widthSliderNumber">800</span>px
+  </label>
   <input type="range" min="400" max="2000" step="10" value="800" id="widthSlider"
-	 oninput="document.getElementById('widthSliderNumber').innerHTML = this.value;">
+         oninput="document.getElementById('widthSliderNumber').innerHTML = this.value;">
 </div>
 
 <div class="col" ng-show="step == 'load'">
   <label id="darknessSliderLabel" for="darknessSlider">Outline darkness:
-  <span id="darknessSliderNumber" style="color: rgb(153, 153, 153);">40</span></label>
+    <span id="darknessSliderNumber" style="color: rgb(153, 153, 153);">40</span>
+  </label>
   <input type="range" min="1" max="100" step="1" value="40" id="darknessSlider"
-	 oninput="document.getElementById('darknessSliderNumber').innerHTML = this.value; var gray = Math.round(255 * (1 - this.value / 100)); document.getElementById('darknessSliderNumber').style.color = 'rgb('+gray+', '+gray+', '+gray+')';">
+         oninput="document.getElementById('darknessSliderNumber').innerHTML = this.value; var gray = Math.round(255 * (1 - this.value / 100)); document.getElementById('darknessSliderNumber').style.color = 'rgb('+gray+', '+gray+', '+gray+')';">
 </div>
-
 
 <div class="col" id="loader" ng-show="step == 'load'" ng-style="loaderStyle" image-loaded="imageLoaded(img)" load-file>
   <p>Drop image here to load,<br>or browse for image.</p>
@@ -30,40 +32,38 @@
   </button>
 </div>
 
-
 <div class="col" id="toolbar">
   <div id="buttons" ng-show="step != 'process'">
-    
     <button type="button" class="btn btn-secondary" ng-click="newImage()"
-	 ng-show="step == 'select' || step == 'result'">new image</button>
+            ng-show="step == 'select' || step == 'result'">new image</button>
     
     <button type="button" class="btn btn-secondary"
-	 ng-click="clearPalette()"
-	 ng-show="step == 'select' && palette.length > 0">clear palette</button>
+            ng-click="clearPalette()"
+            ng-show="step == 'select' && palette.length > 0">clear palette</button>
     
     <button type="button" class="btn btn-primary" ng-click="pbnify()"
-	 ng-show="step == 'select' && palette.length > 1">PBNify</button>
+            ng-show="step == 'select' && palette.length > 1">ColorBox</button>
     
     <button type="button" class="btn btn-secondary" ng-click="recolor()"
-	 ng-show="step == 'result'">recolor</button>
+            ng-show="step == 'result'">recolor</button>
     
+    <!-- קבוצה עבור תמונה מעובדת (filled) -->
     <div class="btn-group" role="group" ng-show="step == 'result'">
-      <button type="button" class="btn btn-primary"
-	   ng-click="viewFilled()" ng-show="step == 'result'">filled</button>
-      <button id="save-filled" type="button" class="btn btn-success"
-	      ng-click="saveFilled()" target="_blank">save</button>
+      <button type="button" class="btn btn-primary" ng-click="viewFilled()"
+              ng-show="step == 'result'">filled</button>
+      <!-- כפתור הדפסה עבור התמונה המעובדת -->
+      <button id="print-filled" type="button" class="btn btn-info"
+              ng-click="printFilled()">print</button>
     </div>
     
+    <!-- קבוצה עבור קווי מתאר (outline) -->
     <div class="btn-group" role="group" ng-show="step == 'result'">
       <button type="button" class="btn btn-primary" ng-click="viewOutline()"
-	   ng-show="step == 'result'">outline</button>
-      <button id="save-outline" type="button" class="btn btn-success"
-	      ng-click="saveOutline()" target="_blank">save</button>
+              ng-show="step == 'result'">outline</button>
+      <!-- כפתור הדפסה עבור קווי המתאר -->
+      <button id="print-outline" type="button" class="btn btn-info"
+              ng-click="printOutline()">print</button>
     </div>
-    
-    <button id="save-palette" type="button" class="btn btn-success"
-       ng-click="savePalette()" ng-show="step == 'result'"
-       target="_blank">save palette</button>
     
   </div>
   
@@ -72,24 +72,22 @@
   </div>
 </div>
 
-
 <div class="col" id="palette">
-  <div class="swatch" ng-repeat="color in palette" ng-style="{ 'background-color': 'rgb(' + color.r + ',' + color.g + ',' + color.b + ')' }">
-    
-    <div class="swatch-label" ng-show="step == 'result' && (view == 'outline' || colorInfoVisible == true)">{{ $index + 1 }}</div>
+  <div class="swatch" ng-repeat="color in palette"
+       ng-style="{ 'background-color': 'rgb(' + color.r + ',' + color.g + ',' + color.b + ')' }">
+    <div class="swatch-label" ng-show="step == 'result' && (view == 'outline' || colorInfoVisible == true)">
+      {{ color.label }}
+    </div>
     <img ng-click="removeColor(color)" ng-show="step == 'select'" src="images/delete.png">
   </div>
 </div>
 
-
 <div class="col" id="color-info" ng-show="step == 'result'">
   <button type="button" class="btn btn-secondary"
-       ng-click="showColorInfo()" ng-show="colorInfoVisible == false">show
-    color info</button>
+          ng-click="showColorInfo()" ng-show="colorInfoVisible == false">show color info</button>
   <button type="button" class="btn btn-secondary"
-       ng-click="hideColorInfo()" ng-show="colorInfoVisible == true">hide
-    color info</button>
-  <p ng-repeat="color in palette" ng-show="colorInfoVisible == true" >
+          ng-click="hideColorInfo()" ng-show="colorInfoVisible == true">hide color info</button>
+  <p ng-repeat="color in palette" ng-show="colorInfoVisible == true">
     <strong>{{ $index + 1 }}</strong>: {{ color.hex }} |
     <strong>RGB</strong>({{ color.r }}, {{ color.g }}, {{ color.b }}) |
     <strong>HSL</strong>({{ color.hsl.h }}, {{ color.hsl.s }}%, {{ color.hsl.l }}%) |
@@ -98,12 +96,11 @@
   </p>
 </div>
 
-
 <div class="col" id="canvases" ng-hide="step == 'load'">
   <div class="canvas-container" ng-show="step == 'select' || step == 'process'">
     <canvas id="img-canvas" stage></canvas>
     <div class="sample-point" ng-repeat="color in palette"
-	 ng-style="{ left: (color.x - 5) + 'px', top: (color.y - 5) + 'px' }"></div>
+         ng-style="{ left: (color.x - 5) + 'px', top: (color.y - 5) + 'px' }"></div>
   </div>
   
   <div class="canvas-container" ng-show="step == 'result' && view == 'filled'">
@@ -115,3 +112,15 @@
   </div>
 </div>
 
+<!-- אזור להצגת תמונות הצבעים שנבחרו עם תפריט יפה בשם "ColorBox מתכוני צבע" -->
+<div class="col" id="selected-colors-images" ng-show="palette.length > 0" style="margin-top:30px;">
+  <h3 style="text-align:center; font-family: Arial, sans-serif; color:#333; margin-bottom:20px;">ColorBox Color Mixing Recipe</h3>
+  <div ng-repeat="color in palette" class="color-image" style="display: inline-block; margin: 10px; text-align: center;">
+    <img ng-src="images/colors/{{ color.label }}.jpg"
+         alt="Color #{{ color.label }}"
+         style="width: 200px; height: 120px; border: 1px solid #ccc; border-radius: 8px; transition: transform 0.3s;"
+         onmouseover="this.style.transform='scale(1.05)'"
+         onmouseout="this.style.transform='scale(1)'">
+    <p style="font-family: Arial, sans-serif; font-size: 1em; margin-top: 5px;">Color #{{ color.label }}</p>
+  </div>
+</div>
