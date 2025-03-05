@@ -464,7 +464,7 @@ $scope.printFilled = function() {
 
     // הדפסת אזור הפלטה (מתכוני הצבעים)
     win.document.write('<div class="palette-section">');
-    win.document.write('<h3>ColorBox  palette</h3>');
+    win.document.write('<h3>Color Mixing Recipe</h3>');
     for (var i = 0; i < $scope.palette.length; i++) {
          var color = $scope.palette[i];
          win.document.write('<div class="palette-item">');
