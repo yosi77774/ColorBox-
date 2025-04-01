@@ -1,134 +1,418 @@
-<div class="col" id="description">
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personal Paint by Number Generator</title>
+  <!-- קישור ל-Font Awesome להצגת אייקונים -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* הגדרות בסיסיות */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f7f7f7;
+      color: #333;
+    }
+    h4 {
+      margin: 0;
+      padding: 0;
+    }
+    /* אפקט fade-in */
+    .fade-in {
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    /* פס התקדמות (breadcrumbs) */
+    .progress-tracker {
+      margin-bottom: 20px;
+      padding: 10px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .progress-tracker ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: space-around;
+    }
+    .progress-tracker li {
+      flex: 1;
+      text-align: center;
+      padding: 8px;
+      border-bottom: 2px solid #ccc;
+      transition: background-color 0.3s, border-color 0.3s;
+      cursor: pointer;
+    }
+    .progress-tracker li.active,
+    .progress-tracker li:hover {
+      background-color: #e6f2ff;
+      border-color: #007bff;
+      font-weight: bold;
+    }
+    /* עיצוב אינטראקטיבי לתיאור השלבים */
+    #description details {
+      margin-bottom: 10px;
+      padding: 10px;
+      background: #fff;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    #description summary {
+      cursor: pointer;
+      font-weight: bold;
+      transition: color 0.3s;
+    }
+    #description summary:hover {
+      color: #007bff;
+    }
+    /* הדגשת השלב הפעיל בתיאור השלבים */
+    #description .active-step {
+      border: 2px solid #007bff;
+      border-radius: 4px;
+      background-color: #e6f2ff;
+    }
+    /* מכולת Flex לסידור סרגל כלים וקנבס */
+    .toolbar-canvas-container {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+    }
+    /* Sidebar – סרגל כלים + אזור הצבעים */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 220px;
+    }
+    /* סרגל כלים */
+    #toolbar {
+      background-color: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .toolbar-group {
+      margin-bottom: 20px;
+    }
+    .toolbar-group h4 {
+      font-size: 1.1em;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 5px;
+    }
+    #toolbar button {
+      width: 100%;
+      margin-bottom: 8px;
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.95em;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+    #toolbar button:focus {
+      outline: 2px solid #007bff;
+    }
+    #toolbar button:hover {
+      transform: scale(1.02);
+    }
+    /* צבעים לכפתורים */
+    .btn-secondary {
+      background-color: #6c757d;
+      color: #fff;
+    }
+    .btn-primary {
+      background-color: #007bff;
+      color: #fff;
+    }
+    .btn-info {
+      background-color: #17a2b8;
+      color: #fff;
+    }
+    /* פס התקדמות עבור מצב טעינה */
+    .progress-bar-container {
+      width: 100%;
+      background-color: #e9ecef;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    .progress-bar {
+      width: 0;
+      height: 8px;
+      background-color: #007bff;
+      transition: width 0.3s ease;
+    }
+    /* אזור הקנבס */
+    #canvases {
+      flex-grow: 1;
+      background-color: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      min-height: 300px;
+    }
+    /* אזור הצגת צבעים (Palette) */
+    #palette {
+      background-color: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      width: 220px;
+    }
+    #palette h4 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .swatch {
+      display: inline-block;
+      margin: 5px;
+      width: 40px;
+      height: 40px;
+      border-radius: 4px;
+      position: relative;
+      cursor: pointer;
+    }
+    /* אייקון הסרה (Remove) */
+    .remove-swatch {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background-color: #ff4d4d;
+      color: #fff;
+      width: 18px;
+      height: 18px;
+      line-height: 18px;
+      border-radius: 50%;
+      text-align: center;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      cursor: pointer;
+    }
+    .swatch:hover .remove-swatch {
+      opacity: 1;
+    }
+    /* עיצוב כללי לעמודים */
+    .col {
+      margin-bottom: 20px;
+    }
+    /* Responsive */
+    @media (max-width: 768px) {
+      .toolbar-canvas-container {
+        flex-direction: column;
+      }
+      .sidebar, #canvases, #palette {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- פס התקדמות / breadcrumbs -->
+<div class="progress-tracker fade-in">
+  <ul>
+    <!-- יש להתאים את ng-click כך שישנה את המשתנה 'step' בהתאם -->
+    <li ng-click="goToStep('load')" ng-class="{'active': step=='load'}">Step 1</li>
+    <li ng-click="goToStep('select')" ng-class="{'active': step=='select'}">Step 2</li>
+    <li ng-click="goToStep('result')" ng-class="{'active': step=='result'}">Step 3</li>
+  </ul>
+</div>
+
+<!-- תיאור הכלי והשלבים (אינטראקטיבי) -->
+<div class="col fade-in" id="description">
   <p>
-    <strong>Personal paint by number generator</strong><br>
+    <strong>Personal Paint by Number Generator</strong><br>
     With Built-in Color Mixing Recipe
   </p>
-  <p ng-class="{ 'other-step': step != 'load' }">1. Load an image.</p>
-  <p ng-class="{ 'other-step': step != 'select' }">2. Click some points on the image to select your color palette.</p>
-  <p ng-class="{ 'other-step': step != 'select' || palette.length < 2 }">
-    3. Click ColorBox and the image will be converted to a paint by number outline + color mixing recipe. View your art and modify before printing.
-  </p>
-  <p ng-class="{ 'other-step': step != 'result' }">4. Print the outline and the Color image with the color mixing recipe.</p>
-  <p ng-class="{ 'other-step': step != 'result' }">5. Use your ColorBox to mix paints and enjoy painting your love ones.</p>
-  <p ng-class="{ 'other-step': step != 'result' }">6. You may also save the files for future work or re use.</p>
+  
+  <!-- שלב 1 -->
+  <details class="interactive-step" open ng-class="{'active-step': step=='load'}">
+    <summary>Step 1</summary>
+    <p ng-class="{ 'other-step': step != 'load' }">1. Load an image.</p>
+  </details>
+  
+  <!-- שלב 2 -->
+  <details class="interactive-step" open ng-class="{'active-step': step=='select'}">
+    <summary>Step 2</summary>
+    <p ng-class="{ 'other-step': step != 'select' }">2. Click some points on the image to select your color palette.</p>
+  </details>
+  
+  <!-- שלב 3 -->
+  <details class="interactive-step" open ng-class="{'active-step': step=='result'}">
+    <summary>Step 3</summary>
+    <p ng-class="{ 'other-step': step != 'select' || palette.length < 2 }">
+      3. Click ColorBox and the image will be converted to a paint by number outline + color mixing recipe.
+      View your art and modify before printing.
+    </p>
+  </details>
+  
+  <!-- שלב 4 -->
+  <details class="interactive-step" open ng-class="{'active-step': step=='result'}">
+    <summary>Step 4</summary>
+    <p ng-class="{ 'other-step': step != 'result' }">4. Print the outline and the Color image with the color mixing recipe.</p>
+  </details>
+  
+  <!-- שלב 5 -->
+  <details class="interactive-step" open ng-class="{'active-step': step=='result'}">
+    <summary>Step 5</summary>
+    <p ng-class="{ 'other-step': step != 'result' }">5. Use your ColorBox to mix paints and enjoy painting your love ones.</p>
+  </details>
+  
+  <!-- שלב 6 -->
+  <details class="interactive-step" open ng-class="{'active-step': step=='result'}">
+    <summary>Step 6</summary>
+    <p ng-class="{ 'other-step': step != 'result' }">6. You may also save the files for future work or re-use.</p>
+  </details>
+  
   <p ng-class="'other-step'">
     <em>Privacy note: Your image will only be loaded into the browser on your computer. Nothing will be uploaded anywhere.</em>
   </p>
 </div>
 
-<div class="col" ng-show="step == 'load'">
-  <label id="widthSliderLabel" for="widthSlider">Resize width to:
-    <span id="widthSliderNumber">800</span>px
+<!-- הגדרות טעינת תמונה (יוצג רק כאשר step = "load") -->
+<div class="col fade-in" ng-show="step == 'load'">
+  <label id="widthSliderLabel" for="widthSlider">
+    Resize width to: <span id="widthSliderNumber">800</span>px
   </label>
   <input type="range" min="400" max="2000" step="10" value="800" id="widthSlider"
          oninput="document.getElementById('widthSliderNumber').innerHTML = this.value;">
 </div>
 
-<div class="col" ng-show="step == 'load'">
-  <label id="darknessSliderLabel" for="darknessSlider">Outline darkness:
-    <span id="darknessSliderNumber" style="color: rgb(153, 153, 153);">40</span>
+<div class="col fade-in" ng-show="step == 'load'">
+  <label id="darknessSliderLabel" for="darknessSlider">
+    Outline darkness: <span id="darknessSliderNumber" style="color: rgb(153, 153, 153);">40</span>
   </label>
   <input type="range" min="1" max="100" step="1" value="40" id="darknessSlider"
-         oninput="document.getElementById('darknessSliderNumber').innerHTML = this.value; var gray = Math.round(255 * (1 - this.value / 100)); document.getElementById('darknessSliderNumber').style.color = 'rgb('+gray+', '+gray+', '+gray+')';">
+         oninput="
+            document.getElementById('darknessSliderNumber').innerHTML = this.value; 
+            var gray = Math.round(255 * (1 - this.value / 100)); 
+            document.getElementById('darknessSliderNumber').style.color = 'rgb('+gray+', '+gray+', '+gray+')';
+         ">
 </div>
 
-<div class="col" id="loader" ng-show="step == 'load'" ng-style="loaderStyle" image-loaded="imageLoaded(img)" load-file>
+<div class="col fade-in" id="loader" ng-show="step == 'load'" ng-style="loaderStyle" image-loaded="imageLoaded(img)" load-file>
   <p>Drop image here to load,<br>or browse for image.</p>
-  <button type="button" class="btn btn-secondary">
-    Browse
+  <button type="button" class="btn btn-secondary" title="Browse and select image">
+    <i class="fas fa-folder-open"></i> Browse
     <input type="file" id="fileBrowser">
   </button>
 </div>
 
-<div class="col" id="toolbar">
-  <div id="buttons" ng-show="step != 'process'">
-    <button type="button" class="btn btn-secondary" ng-click="newImage()"
-            ng-show="step == 'select' || step == 'result'">new image</button>
-    
-    <button type="button" class="btn btn-secondary"
-            ng-click="clearPalette()"
-            ng-show="step == 'select' && palette.length > 0">clear palette</button>
-    
-    <button type="button" class="btn btn-primary" ng-click="pbnify()"
-            ng-show="step == 'select' && palette.length > 1">ColorBox</button>
-    
-    <button type="button" class="btn btn-secondary" ng-click="recolor()"
-            ng-show="step == 'result'">recolor</button>
-    
-    <!-- קבוצה עבור תמונה מעובדת (filled) -->
-    <div class="btn-group" role="group" ng-show="step == 'result'">
-      <button type="button" class="btn btn-primary" ng-click="viewFilled()"
-              ng-show="step == 'result'">Colored  Image</button>
-      <!-- כפתור הדפסה עבור התמונה המעובדת -->
-      <button id="print-filled" type="button" class="btn btn-info"
-              ng-click="printFilled()">print</button>
+<!-- אזור Flex: Sidebar (סרגל כלים + Palette) וקנבס, יוצג רק כאשר step אינו "load" -->
+<div class="toolbar-canvas-container fade-in" ng-show="step != 'load'">
+  
+  <!-- Sidebar: סרגל כלים + אזור הצבעים -->
+  <div class="sidebar">
+    <!-- סרגל כלים -->
+    <div id="toolbar" role="navigation" aria-label="כלי עבודה">
+      <!-- קבוצה 1: פעולות תמונה -->
+      <div class="toolbar-group">
+        <h4>Image</h4>
+        <button type="button" class="btn btn-secondary" ng-click="newImage()"
+                ng-show="step == 'select' || step == 'result'" title="Load new image">
+          <i class="fas fa-image"></i> New Image
+        </button>
+        <button type="button" class="btn btn-secondary" ng-click="clearPalette()"
+                ng-show="step == 'select' && palette.length > 0" title="Clear selected colors">
+          <i class="fas fa-eraser"></i> Clear Palette
+        </button>
+      </div>
+      
+      <!-- קבוצה 2: עיבוד ותוצאה -->
+      <div class="toolbar-group">
+        <h4>Processing</h4>
+        <button type="button" class="btn btn-primary" ng-click="pbnify()"
+                ng-show="step == 'select' && palette.length > 1" title="Convert to Paint by Number">
+          <i class="fas fa-magic"></i> ColorBox
+        </button>
+        <button type="button" class="btn btn-secondary" ng-click="recolor()"
+                ng-show="step == 'result'" title="Reapply color effects">
+          <i class="fas fa-palette"></i> Recolor
+        </button>
+      </div>
+      
+      <!-- קבוצה 3: תצוגה והדפסה -->
+      <div class="toolbar-group">
+        <h4>View & Print</h4>
+        <div ng-show="step == 'result'" style="margin-bottom: 10px;">
+          <button type="button" class="btn btn-primary" ng-click="viewFilled()" title="View colored image">
+            <i class="fas fa-eye"></i> Colored Image
+          </button>
+          <button id="print-filled" type="button" class="btn btn-info"
+                  ng-click="printFilled()" title="Print colored image">
+            <i class="fas fa-print"></i> Print
+          </button>
+        </div>
+        <div ng-show="step == 'result'">
+          <button type="button" class="btn btn-primary" ng-click="viewOutline()" title="View outline">
+            <i class="fas fa-pencil-alt"></i> Outline
+          </button>
+          <button id="print-outline" type="button" class="btn btn-info"
+                  ng-click="printOutline()" title="Print outline">
+            <i class="fas fa-print"></i> Print
+          </button>
+        </div>
+      </div>
+      
+      <!-- מצב עיבוד עם פס התקדמות -->
+      <div ng-show="step == 'process'" style="margin-top: 20px; text-align: center;">
+        <img id="spinner" src="images/spinner.png" alt="Processing...">
+        <div class="progress-bar-container" aria-label="Processing progress">
+          <div class="progress-bar" style="width: 60%;"></div>
+        </div>
+        <p>{{ status }}</p>
+      </div>
     </div>
     
-    <!-- קבוצה עבור קווי מתאר (outline) -->
-    <div class="btn-group" role="group" ng-show="step == 'result'">
-      <button type="button" class="btn btn-primary" ng-click="viewOutline()"
-              ng-show="step == 'result'">outline</button>
-      <!-- כפתור הדפסה עבור קווי המתאר -->
-      <button id="print-outline" type="button" class="btn btn-info"
-              ng-click="printOutline()">print</button>
+    <!-- אזור הצגת צבעים (Palette) מתחת לסרגל הכלים -->
+    <div id="palette">
+      <h4>Selected Colors</h4>
+      <div class="swatch" ng-repeat="color in palette"
+           ng-style="{ 'background-color': 'rgb(' + color.r + ',' + color.g + ',' + color.b + ')' }">
+        <!-- האייקון להסרת צבע יוצג רק במצב בחירת צבעים -->
+        <span class="remove-swatch" ng-if="step=='select'" ng-click="removeColor(color)" title="Remove color">×</span>
+      </div>
     </div>
-    
   </div>
   
-  <div ng-show="step == 'process'">
-    <img id="spinner" src="images/spinner.png"> {{ status }}
+  <!-- אזור הקנבס -->
+  <div id="canvases">
+    <div class="canvas-container fade-in" ng-show="step == 'select' || step == 'process'">
+      <canvas id="img-canvas" stage></canvas>
+      <div class="sample-point" ng-repeat="color in palette"
+           ng-style="{ left: (color.x - 5) + 'px', top: (color.y - 5) + 'px' }"></div>
+    </div>
+    
+    <div class="canvas-container fade-in" ng-show="step == 'result' && view == 'filled'">
+      <canvas id="filled-canvas" result></canvas>
+    </div>
+    
+    <div class="canvas-container fade-in" ng-show="step == 'result' && view == 'outline'">
+      <canvas id="outline-canvas" result></canvas>
+    </div>
   </div>
 </div>
 
-<div class="col" id="palette">
-  <div class="swatch" ng-repeat="color in palette"
-       ng-style="{ 'background-color': 'rgb(' + color.r + ',' + color.g + ',' + color.b + ')' }">
-    <div class="swatch-label" ng-show="step == 'result' && (view == 'outline' || colorInfoVisible == true)">
-      {{ color.label }}
-    </div>
-    <img ng-click="removeColor(color)" ng-show="step == 'select'" src="images/delete.png">
-  </div>
-</div>
-<!--
-<div class="col" id="color-info" ng-show="step == 'result'">
-  <button type="button" class="btn btn-secondary"
-          ng-click="showColorInfo()" ng-show="colorInfoVisible == false">show color info</button>
-  <button type="button" class="btn btn-secondary"
-          ng-click="hideColorInfo()" ng-show="colorInfoVisible == true">hide color info</button>
-  <p ng-repeat="color in palette" ng-show="colorInfoVisible == true">
-    <strong>{{ $index + 1 }}</strong>: {{ color.hex }} |
-    <strong>RGB</strong>({{ color.r }}, {{ color.g }}, {{ color.b }}) |
-    <strong>HSL</strong>({{ color.hsl.h }}, {{ color.hsl.s }}%, {{ color.hsl.l }}%) |
-    <strong>HSV/HSB</strong>({{ color.hsv.h }}, {{ color.hsv.s }}%, {{ color.hsv.v }}%) |
-    <strong>CMYK</strong>({{ color.cmyk.c }}%, {{ color.cmyk.m }}%, {{ color.cmyk.y }}%, {{ color.cmyk.k }}%)
-  </p>
-</div>
--->
-<div class="col" id="canvases" ng-hide="step == 'load'">
-  <div class="canvas-container" ng-show="step == 'select' || step == 'process'">
-    <canvas id="img-canvas" stage></canvas>
-    <div class="sample-point" ng-repeat="color in palette"
-         ng-style="{ left: (color.x - 5) + 'px', top: (color.y - 5) + 'px' }"></div>
-  </div>
-  
-  <div class="canvas-container" ng-show="step == 'result' && view == 'filled'">
-    <canvas id="filled-canvas" result></canvas>
-  </div>
-  
-  <div class="canvas-container" ng-show="step == 'result' && view == 'outline'">
-    <canvas id="outline-canvas" result></canvas>
-  </div>
-</div>
-
-<!-- אזור להצגת תמונות הצבעים שנבחרו עם תפריט יפה בשם "ColorBox מתכוני צבע" -->
-<div class="col" id="selected-colors-images" ng-show="palette.length > 0" style="margin-top:30px;">
-  <h3 style="text-align:center; font-family: Arial, sans-serif; color:#333; margin-bottom:20px;">Color Mixing Recipe</h3>
+<!-- אזור הצגת צבעים נבחרים נוספים (Color Mixing Recipe) -->
+<div class="col fade-in" id="selected-colors-images" ng-show="palette.length > 0" style="margin-top:30px;">
+  <h3 style="text-align:center; color:#333; margin-bottom:20px;">Color Mixing Recipe</h3>
   <div ng-repeat="color in palette" class="color-image" style="display: inline-block; margin: 10px; text-align: center;">
     <img ng-src="images/colors/{{ color.label }}.jpg"
          alt="Color #{{ color.label }}"
          style="width: 200px; height: 120px; border: 1px solid #ccc; border-radius: 8px; transition: transform 0.3s;"
          onmouseover="this.style.transform='scale(1.05)'"
          onmouseout="this.style.transform='scale(1)'">
-    <p style="font-family: Arial, sans-serif; font-size: 1em; margin-top: 5px;">Color #{{ color.label }}</p>
+    <p style="font-size: 1em; margin-top: 5px;">Color #{{ color.label }}</p>
   </div>
 </div>
+
+</body>
+</html>
